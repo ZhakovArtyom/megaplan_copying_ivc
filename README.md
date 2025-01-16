@@ -6,10 +6,10 @@
 2. Запустите Docker-контейнер:
 
 _для linux:_
-`docker run -d --name megaplan-container --restart=always -v $(pwd)/logs:/app/logs -p 8000:8000 megaplan-copying-invoices`
+`docker run -d --name invoice-megaplan-container --restart=always -v $(pwd)/logs:/app/logs -p 8001:8000 megaplan-copying-invoices`
 
 _для windows:_
-`docker run -d --name megaplan-container --restart=always -v ${PWD}/logs:/app/logs -p 8000:8000 megaplan-copying-invoices`
+`docker run -d --name invoice-megaplan-container --restart=always -v ${PWD}/logs:/app/logs -p 8001:8000 megaplan-copying-invoices`
 
 **_Если нужно удалить контейнер для перезапуска кода:_**
-`docker rm -f megaplan-container`
+`docker rm -f invoice-megaplan-container`
