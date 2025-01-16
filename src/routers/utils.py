@@ -70,6 +70,16 @@ async def get_invoice(invoice_id):
         response.raise_for_status()
 
 
+async def get_parent_deal_data(deal_id):
+    url = f"{MEGAPLAN_API_URL}/api/v3/deal/{deal_id}"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=MEGAPLAN_HEADER)
+        response.raise_for_status()
+
+    return response.json()["data"]
+
+
 async def get_deal_positions(deal_id):
     url = f"{MEGAPLAN_API_URL}/api/v3/deal/{deal_id}/offerRows"
     logging.info(f"Получаем позиции сделки. URL: {url}")

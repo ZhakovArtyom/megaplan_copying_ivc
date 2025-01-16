@@ -5,8 +5,9 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
 
-from src.routers.invoice_service import create_invoice, edit_invoice, update_child_deal_custom_field, find_parent_deal_info
-from src.routers.utils import get_status_sequence, get_invoice_status, update_invoice_status, get_invoice, get_deal_positions
+from src.routers.invoice_service import create_invoice, edit_invoice, update_child_deal_custom_field
+from src.routers.utils import get_status_sequence, get_invoice_status, update_invoice_status, get_invoice, \
+    get_deal_positions, get_parent_deal_data
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ async def handle_invoice_webhook(request: Request):
     logging.info(f"Received invoice_webhook_data: {invoice_webhook_data}")
 
     # Создаем асинхронную задачу для обработки выгрузки
-    # asyncio.create_task(process_copying_invoice(invoice_webhook_data))
+    asyncio.create_task(process_copying_invoice(invoice_webhook_data))
     return JSONResponse(status_code=200, content={"message": "Задача копирования счёта принята в обработку"})
 
 
@@ -57,11 +58,14 @@ async def handle_update_webhook(request: Request):
 
 
 async def process_copying_invoice(invoice_webhook_data):
-    child_deal_id = invoice_webhook_data["child_deal_id"]  # TODO check webhook_data
+    child_deal_id = invoice_webhook_data["data"]["deal"]["Id"]
     child_deal_positions = await get_deal_positions(child_deal_id)
-    platezh_bank = invoice_webhook_data[
-        "Category1000057CustomFieldPlatezhBank"]  # TODO посмотреть будет ли это поле в invoice_webhook_data, либо нужно будет делать get_child_deal_data
-    parent_deal_id, parent_program = await find_parent_deal_info(child_deal_id)
+    platezh_bank = invoice_webhook_data["data"]["deal"]["Category1000057CustomFieldPlatezhBank"]
+
+    parent_deal_id = invoice_webhook_data["data"]["deal"]["RelatedObjects"][0]["Id"]
+    parent_deal_data = await get_parent_deal_data(parent_deal_id)
+    parent_program = parent_deal_data["program"]["id"]
+
     parent_invoice_id = await create_invoice(parent_deal_id, platezh_bank, parent_program)
     await update_child_deal_custom_field(child_deal_id, parent_invoice_id)
     await edit_invoice(parent_invoice_id, child_deal_positions)
@@ -125,33 +129,3 @@ async def process_update_positions(webhook_data):
         logging.info(f"Статус счета {invoice_id} обновлен на '{status}'")
     logging.info(f"Позиции счета {invoice_id} успешно обновлены")
 
-## Возможные статусы
-# черновик
-#     "status": "created",
-#     "possibleStatuses": [
-#       "drawn"
-#     ],
-
-# выставлен на оплату
-#     "status": "drawn",
-#     "possibleStatuses": [
-#       "paid",
-#       "rejected"
-#     ],
-
-# оплачен
-#     "status": "paid",
-#     "possibleStatuses": [
-#       "drawn"
-#     ],
-
-# отменён
-#     "status": "rejected",
-#     "possibleStatuses": [
-#       "created"
-#     ],
-
-
-# Кастомные поля
-# "Category1000057CustomFieldPlatezhBank": "",
-# "Category1000057CustomFieldInvoiceId"
