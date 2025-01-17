@@ -7,7 +7,7 @@ from starlette.requests import Request
 
 from src.routers.invoice_service import create_invoice, edit_invoice, update_child_deal_custom_field
 from src.routers.utils import get_status_sequence, get_invoice_status, update_invoice_status, get_invoice, \
-    get_deal_positions, get_parent_deal_data
+    get_deal_positions, get_deal_data, send_comment
 
 router = APIRouter()
 
@@ -59,14 +59,18 @@ async def handle_update_webhook(request: Request):
 
 async def process_copying_invoice(invoice_webhook_data):
     child_deal_id = invoice_webhook_data["data"]["deal"]["Id"]
-    child_deal_positions = await get_deal_positions(child_deal_id)
     platezh_bank = invoice_webhook_data["data"]["deal"]["Category1000057CustomFieldPlatezhBank"]
+    child_deal_data = await get_deal_data(child_deal_id)
+    child_deal_number = child_deal_data["number"]
+    child_deal_positions = await get_deal_positions(child_deal_id)
 
     parent_deal_id = invoice_webhook_data["data"]["deal"]["RelatedObjects"][0]["Id"]
-    parent_deal_data = await get_parent_deal_data(parent_deal_id)
+    parent_deal_data = await get_deal_data(parent_deal_id)
     parent_program = parent_deal_data["program"]["id"]
 
     parent_invoice_id = await create_invoice(parent_deal_id, platezh_bank, parent_program)
+    comment_text = f"[KUBIT] - создан счет №{parent_invoice_id}. на основании поступления №{child_deal_number}"
+    await send_comment(parent_deal_id, comment_text)
     await update_child_deal_custom_field(child_deal_id, parent_invoice_id)
     await edit_invoice(parent_invoice_id, child_deal_positions)
 

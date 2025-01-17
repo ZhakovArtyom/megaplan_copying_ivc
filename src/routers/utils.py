@@ -70,12 +70,13 @@ async def get_invoice(invoice_id):
         response.raise_for_status()
 
 
-async def get_parent_deal_data(deal_id):
+async def get_deal_data(deal_id):
     url = f"{MEGAPLAN_API_URL}/api/v3/deal/{deal_id}"
 
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=MEGAPLAN_HEADER)
         response.raise_for_status()
+        await asyncio.sleep(1)
 
     return response.json()["data"]
 
@@ -107,3 +108,29 @@ async def get_trigger_id(platezh_bank, parent_program):
             return trigger_id
 
     return None
+
+
+async def send_comment(deal_id: str, content: str):
+    url = f"https://{MEGAPLAN_API_URL}/deal/{deal_id}/comments"
+    body = {
+        "contentType": "CommentCreateActionRequest",
+        "comment": {
+            "contentType": "Comment",
+            "content": content,
+            "subject": {
+                "contentType": "Deal",
+                "id": deal_id
+            }
+        },
+        "transports": [
+            {}
+        ]
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=MEGAPLAN_HEADER, json=body)
+        result = response.json()
+        logging.info(result)
+        response.raise_for_status()
+        logging.info(f"Комментарий успешно отравлен в сделку: {deal_id}")
+        await asyncio.sleep(1)
