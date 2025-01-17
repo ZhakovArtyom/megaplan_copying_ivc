@@ -60,12 +60,10 @@ async def get_invoice(invoice_id):
         response = await client.get(url, headers=MEGAPLAN_HEADER)
         await asyncio.sleep(1)
 
-    # Добавим логирование для отладки
-    logging.info(f"Status Code: {response.status_code}")
-    logging.info(f"Response Content: {response.text}")
-
     if response.status_code == 200:
-        return response.json().get("data")
+        response_data = response.json().get("data")
+        logging.info(f"Response invoice Content: {response_data}")
+        return response_data
     else:
         response.raise_for_status()
 

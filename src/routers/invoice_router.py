@@ -33,7 +33,7 @@ async def handle_paid_webhook(request: Request):
     webhook_data = await request.json()
     logging.info(f"Received paid_webhook_data: {webhook_data}")
 
-    # asyncio.create_task(process_update_status(webhook_data, "paid"))
+    asyncio.create_task(process_update_status(webhook_data, "paid"))
     return JSONResponse(status_code=200,
                         content={"message": "Задача обновления статуса счета на 'Оплачено' принята в обработку"})
 
@@ -43,7 +43,7 @@ async def handle_cancel_webhook(request: Request):
     webhook_data = await request.json()
     logging.info(f"Received cancel_webhook_data: {webhook_data}")
 
-    # asyncio.create_task(process_update_status(webhook_data, "rejected"))
+    asyncio.create_task(process_update_status(webhook_data, "rejected"))
     return JSONResponse(status_code=200,
                         content={"message": "Задача обновления статуса счета на 'Отказ' принята в обработку"})
 
@@ -53,7 +53,7 @@ async def handle_update_webhook(request: Request):
     webhook_data = await request.json()
     logging.info(f"Received update_webhook_data: {webhook_data}")
 
-    # asyncio.create_task(process_update_positions(webhook_data))
+    asyncio.create_task(process_update_positions(webhook_data))
     return JSONResponse(status_code=200, content={"message": "Задача обновления позиций счета принята в обработку"})
 
 
@@ -76,18 +76,12 @@ async def process_copying_invoice(invoice_webhook_data):
 
 
 async def process_update_status(webhook_data, target_status):
-    invoice_id = webhook_data.get("invoice_id")
-    if not invoice_id:
-        logging.error("Invoice ID не предоставлен в webhook_data")
-        return
+    invoice_id = webhook_data["data"]["deal"]["Category1000057CustomFieldInvoiceId"]
 
     current_status = await get_invoice_status(invoice_id)
     logging.info(f"Текущий статус счета {invoice_id}: {current_status}")
 
     status_sequence = get_status_sequence(current_status, target_status)
-    if not status_sequence:
-        logging.error(f"Невозможно перейти из статуса '{current_status}' в '{target_status}'")
-        return
 
     for status in status_sequence:
         await update_invoice_status(invoice_id, status)
@@ -95,10 +89,8 @@ async def process_update_status(webhook_data, target_status):
 
 
 async def process_update_positions(webhook_data):
-    invoice_id = webhook_data.get("invoice_id")
-    if not invoice_id:
-        logging.error("Invoice ID не предоставлен в webhook_data")
-        return
+    invoice_id = webhook_data["data"]["deal"]["Category1000057CustomFieldInvoiceId"]
+    child_deal_id = webhook_data["data"]["deal"]["Id"]
 
     invoice_data = await get_invoice(invoice_id)
     current_status = invoice_data.get("status")
@@ -106,27 +98,16 @@ async def process_update_positions(webhook_data):
 
     if current_status != "created":
         status_sequence = get_status_sequence(current_status, "created")
-        if not status_sequence:
-            logging.error(f"Невозможно перейти из статуса '{current_status}' в 'created'")
-            return
 
         for status in status_sequence:
             await update_invoice_status(invoice_id, status)
             logging.info(f"Статус счета {invoice_id} обновлен на '{status}'")
-
-    child_deal_id = webhook_data.get("child_deal_id")  # TODO точно ли он будет в вебхуке
-    if not child_deal_id:
-        logging.error("Child Deal ID не предоставлен в webhook_data")
-        return
 
     child_deal_positions = await get_deal_positions(child_deal_id)
 
     await edit_invoice(invoice_id, child_deal_positions)
 
     status_sequence = get_status_sequence("created", current_status)
-    if not status_sequence:
-        logging.error(f"Невозможно перейти из статуса '{current_status}' в 'created'")
-        return
 
     for status in status_sequence:
         await update_invoice_status(invoice_id, status)
