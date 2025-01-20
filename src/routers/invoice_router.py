@@ -18,9 +18,10 @@ async def test_endpoint():
     return JSONResponse(status_code=200, content={"message": "Test request successful!"})
 
 
-@router.post("/new")
-async def handle_invoice_webhook(request: Request):
+@router.post("/new/{number}")
+async def handle_invoice_webhook(number: str, request: Request):
     invoice_webhook_data = await request.json()
+    invoice_webhook_data["number"] = number
     logging.info(f"Received invoice_webhook_data: {invoice_webhook_data}")
 
     # Создаем асинхронную задачу для обработки выгрузки
@@ -60,8 +61,7 @@ async def handle_update_webhook(request: Request):
 async def process_copying_invoice(invoice_webhook_data):
     child_deal_id = invoice_webhook_data["data"]["deal"]["Id"]
     platezh_bank = invoice_webhook_data["data"]["deal"]["Category1000057CustomFieldPlatezhBank"]
-    child_deal_data = await get_deal_data(child_deal_id)
-    child_deal_number = child_deal_data["number"]
+    child_deal_number = invoice_webhook_data["number"]
     child_deal_positions = await get_deal_positions(child_deal_id)
 
     parent_deal_id = invoice_webhook_data["data"]["deal"]["RelatedObjects"][0]["Id"]
