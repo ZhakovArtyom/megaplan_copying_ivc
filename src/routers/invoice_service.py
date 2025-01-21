@@ -39,6 +39,8 @@ async def create_invoice(parent_deal_id, platezh_bank, parent_program):
         logging.info(response_data)
         return await get_latest_invoice_id(response_data)
     else:
+        response_data = response.json()
+        logging.info(response_data)
         response.raise_for_status()
 
 
