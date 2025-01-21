@@ -68,7 +68,7 @@ async def process_copying_invoice(invoice_webhook_data):
     parent_deal_data = await get_deal_data(parent_deal_id)
     parent_program = parent_deal_data["program"]["id"]
 
-    parent_invoice_id = await create_invoice(parent_deal_id, platezh_bank, parent_program)
+    parent_invoice_id = await create_invoice(parent_deal_id, platezh_bank, parent_program, child_deal_id)
     comment_text = f"[KUBIT] - создан счет №{parent_invoice_id}. на основании поступления №{child_deal_number}"
     await send_comment(parent_deal_id, comment_text)
     await update_child_deal_custom_field(child_deal_id, parent_invoice_id)

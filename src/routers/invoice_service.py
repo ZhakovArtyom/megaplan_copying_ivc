@@ -6,10 +6,10 @@ import logging
 import httpx
 
 from src.routers.constants import MEGAPLAN_API_URL, MEGAPLAN_HEADER
-from src.routers.utils import get_trigger_id
+from src.routers.utils import get_trigger_id, send_comment
 
 
-async def create_invoice(parent_deal_id, platezh_bank, parent_program):
+async def create_invoice(parent_deal_id, platezh_bank, parent_program, child_deal_id):
     url = f"{MEGAPLAN_API_URL}/api/v3/deal/{parent_deal_id}/applyTrigger"
 
     # Получаем ID триггера на основе входных данных
@@ -39,6 +39,8 @@ async def create_invoice(parent_deal_id, platezh_bank, parent_program):
         logging.info(response_data)
         return await get_latest_invoice_id(response_data)
     else:
+        error_content = "[KUBIT — Отчет] Ошибка при создании счёта"
+        await send_comment(child_deal_id, error_content)
         response_data = response.json()
         logging.info(response_data)
         response.raise_for_status()
