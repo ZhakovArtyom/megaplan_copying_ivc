@@ -29,7 +29,7 @@ async def create_invoice(parent_deal_id, platezh_bank, parent_program):
         ]
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
         await asyncio.sleep(1)
 
@@ -77,7 +77,7 @@ async def edit_invoice(invoice_id, child_deal_positions):
         ],
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=invoice_data)
         await asyncio.sleep(1)
 
@@ -97,7 +97,7 @@ async def update_child_deal_custom_field(deal_id: str, invoice_id: str):
         "Category1000057CustomFieldInvoiceId": invoice_id
     }
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
         await asyncio.sleep(1)
 
