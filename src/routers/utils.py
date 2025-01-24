@@ -96,7 +96,7 @@ async def get_deal_positions(deal_id):
 
 
 async def send_comment(deal_id: str, content: str):
-    url = f"{MEGAPLAN_API_URL}/deal/{deal_id}/comments"
+    url = f"{MEGAPLAN_API_URL}/api/v3/deal/{deal_id}/comments"
     body = {
         "contentType": "CommentCreateActionRequest",
         "comment": {
