@@ -5,7 +5,7 @@ import logging
 
 import httpx
 
-from src.routers.constants import MEGAPLAN_API_URL, MEGAPLAN_HEADER, PROGRAM_TRIGGER_DICT
+from src.routers.constants import MEGAPLAN_API_URL, MEGAPLAN_HEADER
 
 
 def get_status_sequence(current_status, target_status):
@@ -93,19 +93,6 @@ async def get_deal_positions(deal_id):
         return response_data.get("data")
     else:
         response.raise_for_status()
-
-
-async def get_trigger_id(platezh_bank, parent_program):
-    # Проверяем существование программы в словаре
-    if parent_program not in PROGRAM_TRIGGER_DICT:
-        return None
-
-    # Перебираем все триггеры для данной программы
-    for trigger_id, bank in PROGRAM_TRIGGER_DICT[parent_program].items():
-        if platezh_bank == bank:
-            return trigger_id
-
-    return None
 
 
 async def send_comment(deal_id: str, content: str):

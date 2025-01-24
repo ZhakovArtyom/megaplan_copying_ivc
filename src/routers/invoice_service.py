@@ -6,27 +6,14 @@ import logging
 import httpx
 
 from src.routers.constants import MEGAPLAN_API_URL, MEGAPLAN_HEADER
-from src.routers.utils import get_trigger_id, send_comment
+from src.routers.utils import send_comment
 
 
-async def create_invoice(parent_deal_id, platezh_bank, parent_program, child_deal_id):
-    url = f"{MEGAPLAN_API_URL}/api/v3/deal/{parent_deal_id}/applyTrigger"
+async def create_invoice(parent_deal_id, platezh_bank, child_deal_id):
+    url = f"{MEGAPLAN_API_URL}/api/v3/deal/{parent_deal_id}"
 
-    # Получаем ID триггера на основе входных данных
-    trigger_id = await get_trigger_id(platezh_bank, parent_program)
-    if not trigger_id:
-        raise ValueError("Не найден подходящий триггер для указанных параметров")
-
-    # Данные для активации триггера
     data = {
-        "contentType": "ProgramTrigger",
-        "id": trigger_id,
-        "operations": [
-            {
-                "contentType": "CreateInvoice",
-                "invoice": {"contentType": "Invoice"}
-            }
-        ]
+        "Category1000059CustomFieldBankIzPostupleniya": platezh_bank,
     }
 
     async with httpx.AsyncClient(timeout=30.0) as client:
