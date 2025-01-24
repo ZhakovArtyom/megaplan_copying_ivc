@@ -60,7 +60,6 @@ async def edit_invoice(invoice_id, child_deal_positions):
              "tax": {"contentType": position["tax"]["contentType"], "id": position["tax"]["id"]},
              "quantity": position["quantity"],
              "unit": {"contentType": position["unit"]["contentType"], "id": position["unit"]["id"]},
-             "description": position["description"],
              "offer": {"contentType": position["offer"]["contentType"], "id": position["offer"]["id"]}}
             for position in child_deal_positions
         ],
