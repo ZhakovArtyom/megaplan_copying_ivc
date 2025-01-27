@@ -24,7 +24,7 @@ async def create_invoice(parent_deal_id, platezh_bank, child_deal_id):
         logging.info("Счет успешно создан!")
         response_data = response.json()
         logging.info(response_data)
-        return await get_latest_invoice_id(response_data)
+        return await get_latest_invoice_id_and_number(response_data)
     else:
         error_content = "[KUBIT — Отчет] Ошибка при создании счёта"
         await send_comment(child_deal_id, error_content)
@@ -33,20 +33,25 @@ async def create_invoice(parent_deal_id, platezh_bank, child_deal_id):
         response.raise_for_status()
 
 
-async def get_latest_invoice_id(response_data):
+async def get_latest_invoice_id_and_number(response_data):
     # Получаем список всех счетов
     invoices = response_data.get("data", {}).get("invoices", [])
 
     if not invoices:
-        return None
+        return None, None
 
     # Находим счет с максимальным ID
     parent_invoice_id = max(int(invoice["id"]) for invoice in invoices)
+    parent_invoice_number = None
+    for invoice in invoices:
+        if invoice["id"] == parent_invoice_id:
+            parent_invoice_number = invoice["number"]
+            break
 
-    return str(parent_invoice_id)
+    return str(parent_invoice_id), parent_invoice_number
 
 
-async def edit_invoice(invoice_id, child_deal_positions):
+async def edit_invoice(invoice_id, child_deal_positions, status=None):
     url = f"{MEGAPLAN_API_URL}/api/v3/invoice/{invoice_id}"
 
     # Готовим данные для создания копии счета
@@ -64,6 +69,9 @@ async def edit_invoice(invoice_id, child_deal_positions):
             for position in child_deal_positions
         ],
     }
+
+    if status is not None:
+        invoice_data["status"] = status
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=invoice_data)
