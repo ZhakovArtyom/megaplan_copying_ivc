@@ -43,7 +43,7 @@ async def update_invoice_status(invoice_id: str, new_status: str):
 
     async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     if response.status_code == 200:
         logging.info(f"Статус счета {invoice_id} успешно обновлен на {new_status}")
@@ -58,7 +58,7 @@ async def get_invoice(invoice_id):
 
     async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.get(url, headers=MEGAPLAN_HEADER)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     if response.status_code == 200:
         response_data = response.json().get("data")
@@ -74,7 +74,7 @@ async def get_deal_data(deal_id):
     async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.get(url, headers=MEGAPLAN_HEADER)
         response.raise_for_status()
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     return response.json()["data"]
 
@@ -85,7 +85,7 @@ async def get_deal_positions(deal_id):
 
     async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.get(url, headers=MEGAPLAN_HEADER)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     if response.status_code == 200:
         response_data = response.json()
@@ -118,4 +118,4 @@ async def send_comment(deal_id: str, content: str):
         logging.info(result)
         response.raise_for_status()
         logging.info(f"Комментарий успешно отравлен в сделку: {deal_id}")
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)

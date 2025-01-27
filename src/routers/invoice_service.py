@@ -18,7 +18,7 @@ async def create_invoice(parent_deal_id, platezh_bank, child_deal_id):
 
     async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     if response.status_code == 200:
         logging.info("Счет успешно создан!")
@@ -75,7 +75,7 @@ async def edit_invoice(invoice_id, child_deal_positions, status=None):
 
     async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=invoice_data)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     if response.status_code == 200:
         logging.info("Счет успешно отредактирован!")
@@ -95,7 +95,7 @@ async def update_child_deal_custom_field(deal_id: str, invoice_id: str):
 
     async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
 
     if response.status_code == 200:
         logging.info(f"Успешно обновлено поле InvoiceId в сделке {deal_id}")
