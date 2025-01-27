@@ -16,7 +16,7 @@ async def create_invoice(parent_deal_id, platezh_bank, child_deal_id):
         "Category1000059CustomFieldBankIzPostupleniya": platezh_bank,
     }
 
-    async with httpx.AsyncClient(timeout=180.0) as client:
+    async with httpx.AsyncClient(timeout=240.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
         await asyncio.sleep(2)
 
@@ -41,14 +41,14 @@ async def get_latest_invoice_id_and_number(response_data):
         return None, None
 
     # Находим счет с максимальным ID
-    parent_invoice_id = max(int(invoice["id"]) for invoice in invoices)
+    parent_invoice_id = str(max(int(invoice["id"]) for invoice in invoices))
     parent_invoice_number = None
     for invoice in invoices:
         if invoice["id"] == parent_invoice_id:
             parent_invoice_number = invoice["number"]
             break
 
-    return str(parent_invoice_id), parent_invoice_number
+    return parent_invoice_id, parent_invoice_number
 
 
 async def edit_invoice(invoice_id, child_deal_positions, status=None):
@@ -73,7 +73,7 @@ async def edit_invoice(invoice_id, child_deal_positions, status=None):
     if status is not None:
         invoice_data["status"] = status
 
-    async with httpx.AsyncClient(timeout=180.0) as client:
+    async with httpx.AsyncClient(timeout=240.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=invoice_data)
         await asyncio.sleep(2)
 
@@ -93,7 +93,7 @@ async def update_child_deal_custom_field(deal_id: str, invoice_id: str):
         "Category1000057CustomFieldInvoiceId": invoice_id
     }
 
-    async with httpx.AsyncClient(timeout=180.0) as client:
+    async with httpx.AsyncClient(timeout=240.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
         await asyncio.sleep(2)
 
