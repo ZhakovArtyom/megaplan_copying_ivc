@@ -41,7 +41,7 @@ async def update_invoice_status(invoice_id: str, new_status: str):
 
     data = {"status": new_status}
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=data)
         await asyncio.sleep(1)
 
@@ -56,7 +56,7 @@ async def get_invoice(invoice_id):
     url = f"{MEGAPLAN_API_URL}/api/v3/invoice/{invoice_id}"
     logging.info(f"url: {url}")
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.get(url, headers=MEGAPLAN_HEADER)
         await asyncio.sleep(1)
 
@@ -71,7 +71,7 @@ async def get_invoice(invoice_id):
 async def get_deal_data(deal_id):
     url = f"{MEGAPLAN_API_URL}/api/v3/deal/{deal_id}"
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.get(url, headers=MEGAPLAN_HEADER)
         response.raise_for_status()
         await asyncio.sleep(1)
@@ -83,7 +83,7 @@ async def get_deal_positions(deal_id):
     url = f"{MEGAPLAN_API_URL}/api/v3/deal/{deal_id}/offerRows"
     logging.info(f"Получаем позиции сделки. URL: {url}")
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.get(url, headers=MEGAPLAN_HEADER)
         await asyncio.sleep(1)
 
@@ -112,7 +112,7 @@ async def send_comment(deal_id: str, content: str):
         ]
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=180.0) as client:
         response = await client.post(url, headers=MEGAPLAN_HEADER, json=body)
         result = response.json()
         logging.info(result)
