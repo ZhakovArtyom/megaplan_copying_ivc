@@ -38,17 +38,19 @@ async def get_latest_invoice_id_and_number(response_data):
     invoices = response_data.get("data", {}).get("invoices", [])
 
     if not invoices:
-        return None, None
+        return None, None, None
 
     # Находим счет с максимальным ID
     parent_invoice_id = str(max(int(invoice["id"]) for invoice in invoices))
     parent_invoice_number = None
+    parent_invoice_status = None
     for invoice in invoices:
         if invoice["id"] == parent_invoice_id:
             parent_invoice_number = invoice["number"]
+            parent_invoice_status = invoice["status"]
             break
 
-    return parent_invoice_id, parent_invoice_number
+    return parent_invoice_id, parent_invoice_number, parent_invoice_status
 
 
 async def edit_invoice(invoice_id, child_deal_positions, status=None):
