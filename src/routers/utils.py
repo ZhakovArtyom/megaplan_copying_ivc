@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from collections import deque
 
 import httpx
 
@@ -17,18 +18,21 @@ def get_status_sequence(current_status, target_status):
         "rejected": ["created"]
     }
 
-    sequence = []
-    temp_status = current_status
+    queue = deque([(current_status, [current_status])])
+    visited = set()
 
-    while temp_status != target_status:
-        possible = transitions.get(temp_status, [])
-        if not possible:
-            return None
-        next_status = possible[0]  # Выбираем первый возможный статус
-        sequence.append(next_status)
-        temp_status = next_status
+    while queue:
+        status, path = queue.popleft()
+        if status == target_status:
+            return path[1:]
+        if status in visited:
+            continue
+        visited.add(status)
+        for next_status in transitions[status]:
+            if next_status not in visited:
+                queue.append((next_status, path + [next_status]))
 
-    return sequence
+    return None
 
 
 async def get_invoice_status(invoice_id):
