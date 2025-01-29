@@ -9,11 +9,11 @@ from src.routers.constants import MEGAPLAN_API_URL, MEGAPLAN_HEADER
 from src.routers.utils import send_comment
 
 
-async def create_invoice(parent_deal_id, platezh_bank, child_deal_id):
+async def create_invoice(parent_deal_id, platezh_bank, child_deal_id, custom_category: str):
     url = f"{MEGAPLAN_API_URL}/api/v3/deal/{parent_deal_id}"
 
     data = {
-        "Category1000059CustomFieldBankIzPostupleniya": platezh_bank,
+        f"{custom_category}CustomFieldBankIzPostupleniya": platezh_bank,
     }
 
     async with httpx.AsyncClient(timeout=240.0) as client:
@@ -87,12 +87,12 @@ async def edit_invoice(invoice_id, child_deal_positions, status=None):
         response.raise_for_status()
 
 
-async def update_child_deal_custom_field(deal_id: str, invoice_id: str):
+async def update_child_deal_custom_field(deal_id: str, invoice_id: str, custom_category: str):
     url = f"{MEGAPLAN_API_URL}/api/v3/deal/{deal_id}"
 
     data = {
         "contentType": "Deal",
-        "Category1000057CustomFieldInvoiceId": invoice_id
+        f"{custom_category}CustomFieldInvoiceId": invoice_id
     }
 
     async with httpx.AsyncClient(timeout=240.0) as client:

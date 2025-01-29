@@ -7,7 +7,7 @@ from starlette.requests import Request
 
 from src.routers.invoice_service import create_invoice, edit_invoice, update_child_deal_custom_field
 from src.routers.utils import get_status_sequence, get_invoice_status, update_invoice_status, get_invoice, \
-    get_deal_positions, get_deal_data, send_comment
+    get_deal_positions, get_deal_data, send_comment, get_custom_field
 
 router = APIRouter()
 
@@ -59,26 +59,28 @@ async def handle_update_webhook(request: Request):
 
 async def process_copying_invoice(invoice_webhook_data):
     child_deal_id = invoice_webhook_data["data"]["deal"]["Id"]
-    platezh_bank = invoice_webhook_data["data"]["deal"]["Category1000057CustomFieldPlatezhBank"]
+    child_deal_custom_category, platezh_bank = get_custom_field(invoice_webhook_data["data"]["deal"], field_suffix="PlatezhBank")
     child_deal_data = await get_deal_data(child_deal_id)
     child_deal_number = child_deal_data["number"]
     child_deal_positions = await get_deal_positions(child_deal_id)
 
     parent_deal_id = invoice_webhook_data["data"]["deal"]["RelatedObjects"][0]["Id"]
+    parent_deal_data = await get_deal_data(parent_deal_id)
+    parent_deal_custom_category, _ = get_custom_field(parent_deal_data, field_suffix="BankIzPostupleniya")
 
-    parent_invoice_id, parent_invoice_number, parent_invoice_status = await create_invoice(parent_deal_id, platezh_bank, child_deal_id)
+    parent_invoice_id, parent_invoice_number, parent_invoice_status = await create_invoice(parent_deal_id, platezh_bank, child_deal_id, parent_deal_custom_category)
     comment_text = f"[KUBIT] - создан счет №{parent_invoice_number}. на основании поступления №{child_deal_number}"
     if parent_invoice_status != "created":
         comment_text = f"[KUBIT] Попытка создания счета не удалась"
         await send_comment(parent_deal_id, comment_text)
         return
     await send_comment(parent_deal_id, comment_text)
-    await update_child_deal_custom_field(child_deal_id, parent_invoice_id)
+    await update_child_deal_custom_field(child_deal_id, parent_invoice_id, child_deal_custom_category)
     await edit_invoice(parent_invoice_id, child_deal_positions, status="drawn")
 
 
 async def process_update_status(webhook_data, target_status):
-    invoice_id = webhook_data["data"]["deal"]["Category1000057CustomFieldInvoiceId"]
+    _, invoice_id = get_custom_field(webhook_data["data"]["deal"], field_suffix="InvoiceId")
 
     current_status = await get_invoice_status(invoice_id)
     logging.info(f"Текущий статус счета {invoice_id}: {current_status}")
@@ -91,7 +93,7 @@ async def process_update_status(webhook_data, target_status):
 
 
 async def process_update_positions(webhook_data):
-    invoice_id = webhook_data["data"]["deal"]["Category1000057CustomFieldInvoiceId"]
+    _, invoice_id = get_custom_field(webhook_data["data"]["deal"], field_suffix="InvoiceId")
     child_deal_id = webhook_data["data"]["deal"]["Id"]
 
     invoice_data = await get_invoice(invoice_id)

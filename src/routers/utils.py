@@ -123,3 +123,11 @@ async def send_comment(deal_id: str, content: str):
         response.raise_for_status()
         logging.info(f"Комментарий успешно отравлен в сделку: {deal_id}")
         await asyncio.sleep(2)
+
+
+def get_custom_field(deal_data, field_suffix):
+    for key, value in deal_data.items():
+        if isinstance(key, str) and key.endswith(f'CustomField{field_suffix}'):
+            key_prefix = key.split(f'CustomField{field_suffix}')[0]
+            return key_prefix, value
+    return ''
